@@ -10,7 +10,10 @@ class Bundle
 
   class Buildr
     def self.guardfile
-      rubygems_tmpl # lol, this is not the final impl
+      tmpl = gemfile_tmpl
+
+      File.open("Gemfile", "w"){ |f| f.write tmpl } # lol, this is not the final impl...
+
       # the final impl should have
       #
       # a self.gems method that maps the guardfile gems and does:
@@ -23,11 +26,11 @@ class Bundle
     end
 
     def self.gemfile_tmpl
-      <<-ASD.gsub(/\s\s\s\s\s\s/, '')
+      <<-ASD.gsub(/^\s+/, '')
         source "http://rubygems.org"
 
         gem 'haml'
-      <<ASD
+      ASD
     end
   end
 
@@ -66,13 +69,20 @@ end
 
 class Task
   def self.run
-    puts `python -m SimpleHTTPServer 3000`
-    # puts `rackup`
+    popen_read "python -m SimpleHTTPServer 3001"
   end
 
   def self.setup
     Bundle.setup
     Bundle.install
+  end
+
+  # private
+
+  def self.popen_read(cmd)
+    IO.popen cmd, 'r+' do |f|
+      puts f.gets
+    end
   end
 end
 
