@@ -5,18 +5,82 @@ task :default => [:setup_and_run]
 #   puts "hello world"
 # end
 
-task :run do
-  puts `python -m SimpleHTTPServer 3000`
-  # puts `rackup`
+
+class Bundle
+
+  class Buildr
+    def self.guardfile
+      rubygems_tmpl # lol, this is not the final impl
+      # the final impl should have
+      #
+      # a self.gems method that maps the guardfile gems and does:
+      #
+      # def self.gem(gem:)
+      #   "gem #{name}"
+      #
+      # appending everything to the gemfile_tmpl
+
+    end
+
+    def self.gemfile_tmpl
+      <<-ASD.gsub(/\s\s\s\s\s\s/, '')
+        source "http://rubygems.org"
+
+        gem 'haml'
+      <<ASD
+    end
+  end
+
+  def self.setup
+    app_features = autodetect
+    Buildr.guardfile if app_features.include? :guardfile
+    # switch ... # when action Build.send action # ...
+  end
+
+  def self.autodetect
+    type  = []
+    type << detect_feature_guardfile
+    type << detect_feature_sinatra
+    type << detect_feature_roda
+    type.compact
+  end
+
+  def self.detect_feature_guardfile
+    :guardfile if File.exists? "Guardfile"
+  end
+
+  def self.detect_feature_sinatra
+    :sinatra # if  gem 'sinatra' in Gemfile
+  end
+
+  def self.detect_feature_roda
+    :roda    # if  gem 'roda'    in Gemfile
+  end
+
+  #
+
+  def self.install
+    puts `bundle install`
+  end
 end
 
-task :setup do
-  puts `bundle install`
+class Task
+  def self.run
+    puts `python -m SimpleHTTPServer 3000`
+    # puts `rackup`
+  end
+
+  def self.setup
+    Bundle.setup
+    Bundle.install
+  end
 end
+
+task(:run)   { Task.run   }
+task(:setup) { Task.setup }
+
 
 task :setup_and_run do
-  setup
-  run
+  Task.setup
+  Task.run
 end
-
-# task :run
